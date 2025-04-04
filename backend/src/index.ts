@@ -49,7 +49,6 @@ wss.on("connection", async (socket) => {
     console.log("connected to ws");
     socket.on("message", async (message) => {
         const parsedMessage = JSON.parse(message.toString());
-        console.log(parsedMessage);
         
         
         if (parsedMessage.type === "join") {
@@ -89,7 +88,6 @@ wss.on("connection", async (socket) => {
                             _id: userId },
                     room_id
             };
-            console.log("Message To Send" + messageToSend)
             
             // Broadcast first
             allSockets.get(room_id)?.forEach(socket => {

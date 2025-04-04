@@ -7,6 +7,7 @@ import { userMiddleware } from "../middleware";
 import mongoose from "mongoose";
 import crypto from 'crypto';
 import multer from 'multer';
+import { prisma } from "../db";
 
 type ObjectId = mongoose.Types.ObjectId;
 interface userDataType  {
@@ -45,6 +46,13 @@ userRouter.post("/signup" , upload.single('profilePicture'), async(req , res) =>
     }
 
     try{
+        const existingUser1 = await prisma.user.findFirst({
+            where:{
+                email: email,
+                username: username
+            }
+        });
+        console.log(existingUser1);
         const existingUser = await UserModel.findOne({email : email , username : username});
         if(existingUser){
             res.status(406).json({message : "User with this email and username already exists."});
@@ -59,6 +67,15 @@ userRouter.post("/signup" , upload.single('profilePicture'), async(req , res) =>
                 }
             }
             const response = await UserModel.create(userData);
+            const response1 = await prisma.user.create({
+                data:{
+                    username: username,
+                    email,
+                    password: hashPassword,
+                    profilePicture: "temp"
+                }
+            });
+            console.log(response1);
             const token = jwt.sign({
                 id : response._id,
                 username : response.username,
@@ -81,6 +98,11 @@ userRouter.post("/signin" , async(req, res) => {
     }
 
     try{
+        const existingUser1 = await prisma.user.findFirst({
+            where:{
+                username: username
+            }
+        });
         const existingUser: any = await UserModel.findOne({username});
         if(existingUser){
             const hashedPass: string = existingUser.password;
@@ -179,7 +201,6 @@ userRouter.get("/info/:room_id" , userMiddleware, async(req , res ) =>{
         } else{
             res.status(204).json({message:"Room not found!"});
         }
-        console.log(room);
     } catch(err){
         res.status(500).json({message : "Server error" , error: err});
     }

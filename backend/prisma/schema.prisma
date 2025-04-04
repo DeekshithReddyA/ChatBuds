@@ -20,24 +20,34 @@ model User {
   email           String                 @unique
   password        String             
   profilePicture  String
-  rooms           Room[]                 @relation(fields: [roomId])
-  message         Messages               @relation((fields: [id]))
+
+  rooms           Room[]                 @relation("UserRooms")            
+  messages        Messages[]
 }
 
 
 model Room{
   id            String            @id   @default(uuid())  
-  roomId        String            
+  roomId        String                  @unique
   name          String            
   roomPicture   String
-  users         User[]
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt            
+
+  users         User[]                  @relation("UserRooms")
+  messages      Messages[]
+  
 }
 
 
 model Messages {
   id            String           @id     @default(uuid())
-  sender        User
-  room_id       Room
   text          String
   timestamp     DateTime                 @default(now())
+
+  sender        User                     @relation(fields: [senderId] , references: [id])
+  senderId      String
+  
+  room_id       Room                     @relation(fields: [roomId] , references: [id])
+  roomId        String
 }

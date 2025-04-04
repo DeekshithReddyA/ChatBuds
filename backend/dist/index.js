@@ -49,7 +49,6 @@ wss.on("connection", (socket) => __awaiter(void 0, void 0, void 0, function* () 
     socket.on("message", (message) => __awaiter(void 0, void 0, void 0, function* () {
         var _a;
         const parsedMessage = JSON.parse(message.toString());
-        console.log(parsedMessage);
         if (parsedMessage.type === "join") {
             const token = parsedMessage.payload.token;
             const decoded = jsonwebtoken_1.default.verify(token, JWT_SECRET);
@@ -84,7 +83,6 @@ wss.on("connection", (socket) => __awaiter(void 0, void 0, void 0, function* () 
                     _id: userId },
                 room_id
             };
-            console.log("Message To Send" + messageToSend);
             // Broadcast first
             (_a = allSockets.get(room_id)) === null || _a === void 0 ? void 0 : _a.forEach(socket => {
                 if (socket.readyState === ws_1.WebSocket.OPEN) {

@@ -21,6 +21,7 @@ const middleware_1 = require("../middleware");
 const mongoose_1 = __importDefault(require("mongoose"));
 const crypto_1 = __importDefault(require("crypto"));
 const multer_1 = __importDefault(require("multer"));
+const db_2 = require("../db");
 const userRouter = (0, express_1.Router)();
 const saltRounds = 5;
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -33,6 +34,13 @@ userRouter.post("/signup", upload.single('profilePicture'), (req, res) => __awai
         return;
     }
     try {
+        const existingUser1 = yield db_2.prisma.user.findFirst({
+            where: {
+                email: email,
+                username: username
+            }
+        });
+        console.log(existingUser1);
         const existingUser = yield db_1.UserModel.findOne({ email: email, username: username });
         if (existingUser) {
             res.status(406).json({ message: "User with this email and username already exists." });
@@ -47,6 +55,15 @@ userRouter.post("/signup", upload.single('profilePicture'), (req, res) => __awai
                 };
             }
             const response = yield db_1.UserModel.create(userData);
+            const response1 = yield db_2.prisma.user.create({
+                data: {
+                    username: username,
+                    email,
+                    password: hashPassword,
+                    profilePicture: "temp"
+                }
+            });
+            console.log(response1);
             const token = jsonwebtoken_1.default.sign({
                 id: response._id,
                 username: response.username,
@@ -66,6 +83,11 @@ userRouter.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, funct
         return;
     }
     try {
+        const existingUser1 = yield db_2.prisma.user.findFirst({
+            where: {
+                username: username
+            }
+        });
         const existingUser = yield db_1.UserModel.findOne({ username });
         if (existingUser) {
             const hashedPass = existingUser.password;
@@ -159,7 +181,6 @@ userRouter.get("/info/:room_id", middleware_1.userMiddleware, (req, res) => __aw
         else {
             res.status(204).json({ message: "Room not found!" });
         }
-        console.log(room);
     }
     catch (err) {
         res.status(500).json({ message: "Server error", error: err });
@@ -188,7 +209,6 @@ userRouter.get("/home/userdata", middleware_1.userMiddleware, (req, res) => __aw
     const username = req.username;
     const userId = req.userId;
     const userData = yield db_1.UserModel.find({ _id: userId, username }, { password: 0, email: 0, __v: 0 }).populate("rooms");
-    console.log(userData);
     if (userData[0]) {
         res.status(200).json({ userData: userData[0] });
     }

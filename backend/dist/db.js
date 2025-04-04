@@ -33,10 +33,13 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UserModel = exports.RoomModel = exports.MessageModel = void 0;
+exports.prisma = exports.UserModel = exports.RoomModel = exports.MessageModel = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 require("dotenv/config");
+const client_1 = require("@prisma/client");
 const mongoURI = process.env.MONGO_URI;
+const prisma = new client_1.PrismaClient();
+exports.prisma = prisma;
 mongoose_1.default.connect(mongoURI)
     .then(() => console.log("connected to mongoDB"));
 const UserSchema = new mongoose_1.default.Schema({

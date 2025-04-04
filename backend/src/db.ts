@@ -1,8 +1,12 @@
 import mongoose , {model , Schema} from 'mongoose';
 import 'dotenv/config';
+import { PrismaClient } from '@prisma/client';
 
 
 const mongoURI: any = process.env.MONGO_URI;
+
+
+const prisma = new PrismaClient();
 
 
 
@@ -51,6 +55,8 @@ const MessageSchema = new mongoose.Schema({
 export const MessageModel = model("Message", MessageSchema);
 export const RoomModel = model("Rooms" , RoomSchema);
 export const UserModel = model("User" , UserSchema);
+
+export {prisma};
 
 
 
