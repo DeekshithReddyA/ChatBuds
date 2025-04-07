@@ -17,8 +17,8 @@ const client = new S3Client({
   region: 'ap-south-1',
   endpoint: 'https://gerjkvkukfpmayzvpkqu.supabase.co/storage/v1/s3',
   credentials: {
-    accessKeyId: 'a32e6cb68e9fcf95d302990ec9aff9fa',
-    secretAccessKey: '3f70b0499d660402eac729da94c6f9ff144cb9ae5693ea5f4581b897a36a236c',
+    accessKeyId: process.env.ACCESS_KEY_ID as string,
+    secretAccessKey: process.env.SECRET_ACCESS_KEY as string
   }
 });
 
