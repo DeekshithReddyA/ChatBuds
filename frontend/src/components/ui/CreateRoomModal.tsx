@@ -4,7 +4,6 @@ import { LabelInputContainer } from "./LabelInputContainer";
 import { Label } from "@radix-ui/react-label";
 import { Input } from "./Input";
 import { BottomGradient } from "./BottomGradient";
-import groupPP from '../assets/roomPP.png';
 import axios from "axios";
 import { CopiedClipboard } from "../icons/CopiedClipboard";
 import { Clipboard } from "../icons/Clipboard";
@@ -57,9 +56,7 @@ export const CreateRoomModal = (props: CreateRoomModalProps) => {
         if (files instanceof File) {
             submitData.append("roomPicture", files);
         } else {
-            const response = await fetch(groupPP);
-            const blob = await response.blob();
-            submitData.append("roomPicture", blob);
+            submitData.append("roomPicture", "groupPP");
         }
         try {
             const response = await axios.post(`${BACKEND_URL}/create-room`, submitData, {

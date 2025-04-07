@@ -6,7 +6,6 @@ import { Input } from "../ui/Input";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FileUpload } from "../ui/file-upload";
-import userPP from '../assets/userPP.png'
 import { LabelInputContainer } from "../ui/LabelInputContainer";
 import { BottomGradient } from "../ui/BottomGradient";
 import { BACKEND_URL } from "../../Config";
@@ -47,10 +46,7 @@ export function Signup() {
         if(files instanceof File){
           submitData.append("profilePicture" , files)
         } else{
-          const response = await fetch(userPP);
-          const blob = await response.blob();
-          console.log(blob);
-          submitData.append("profilePicture" , blob);
+          submitData.append("profilePicture" , "userPP");
         }
         console.log(submitData);
          const response = await axios.post(`${BACKEND_URL}/signup` , submitData,{

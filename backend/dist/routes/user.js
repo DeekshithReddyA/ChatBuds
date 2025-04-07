@@ -22,50 +22,79 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const crypto_1 = __importDefault(require("crypto"));
 const multer_1 = __importDefault(require("multer"));
 const db_2 = require("../db");
+const crypto_2 = require("crypto");
+const client_s3_1 = require("@aws-sdk/client-s3");
+const client = new client_s3_1.S3Client({
+    forcePathStyle: true,
+    region: 'ap-south-1',
+    endpoint: 'https://gerjkvkukfpmayzvpkqu.supabase.co/storage/v1/s3',
+    credentials: {
+        accessKeyId: 'a32e6cb68e9fcf95d302990ec9aff9fa',
+        secretAccessKey: '3f70b0499d660402eac729da94c6f9ff144cb9ae5693ea5f4581b897a36a236c',
+    }
+});
 const userRouter = (0, express_1.Router)();
 const saltRounds = 5;
 const JWT_SECRET = process.env.JWT_SECRET;
 const storage = multer_1.default.memoryStorage();
 const upload = (0, multer_1.default)({ storage: storage });
 userRouter.post("/signup", upload.single('profilePicture'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
     const { email, password, username } = req.body;
+    console.log("req", req.body);
     if (email === "" || password === "" || username === "" || email === undefined || password === undefined || username === undefined) {
         res.status(406).json({ message: "Enter all details" });
         return;
     }
     try {
-        const existingUser1 = yield db_2.prisma.user.findFirst({
+        const existingUser = yield db_2.prisma.user.findFirst({
             where: {
                 email: email,
                 username: username
             }
         });
-        console.log(existingUser1);
-        const existingUser = yield db_1.UserModel.findOne({ email: email, username: username });
+        console.log(existingUser);
+        // const existingUser = await UserModel.findOne({email : email , username : username});
         if (existingUser) {
             res.status(406).json({ message: "User with this email and username already exists." });
         }
         else {
             const hashPassword = yield bcrypt_1.default.hash(password, saltRounds);
             const userData = { username, email, password: hashPassword };
-            if (req.file) {
-                userData.profilePicture = {
-                    data: req.file.buffer,
-                    contentType: req.file.mimetype
+            console.log(req.file);
+            let profilePicURL;
+            if (req.body.profilePicture !== "userPP") {
+                const buffer = (_a = req.file) === null || _a === void 0 ? void 0 : _a.buffer; // Or use file.buffer from multer
+                const contentType = (_b = req.file) === null || _b === void 0 ? void 0 : _b.mimetype; // or get from req.file.mimetype
+                const extension = contentType === null || contentType === void 0 ? void 0 : contentType.split("/")[1];
+                const fileName = `${(0, crypto_2.randomUUID)()}.${extension}`;
+                const bucketName = 'chatbuds';
+                const uploadParams = {
+                    Bucket: bucketName,
+                    Key: 'profilepictures/' + fileName,
+                    Body: buffer,
+                    ContentType: contentType,
+                    ACL: client_s3_1.ObjectCannedACL.public_read // Only works if your bucket allows public access
                 };
+                yield client.send(new client_s3_1.PutObjectCommand(uploadParams));
+                console.log('✅ Uploaded successfully');
+                // 🔗 Get public URL
+                profilePicURL = `https://gerjkvkukfpmayzvpkqu.supabase.co/storage/v1/object/public/${bucketName}/profilepictures/${fileName}`;
+                console.log('📷 Image URL:', profilePicURL);
             }
-            const response = yield db_1.UserModel.create(userData);
-            const response1 = yield db_2.prisma.user.create({
+            else {
+                profilePicURL = `https://gerjkvkukfpmayzvpkqu.supabase.co/storage/v1/object/public/chatbuds/profilepictures/userPP.png`;
+            }
+            const response = yield db_2.prisma.user.create({
                 data: {
                     username: username,
                     email,
                     password: hashPassword,
-                    profilePicture: "temp"
+                    profilePicture: profilePicURL
                 }
             });
-            console.log(response1);
             const token = jsonwebtoken_1.default.sign({
-                id: response._id,
+                id: response.id,
                 username: response.username,
             }, JWT_SECRET);
             res.status(200).json({ message: "User signed up", token });
@@ -83,18 +112,19 @@ userRouter.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, funct
         return;
     }
     try {
-        const existingUser1 = yield db_2.prisma.user.findFirst({
+        const existingUser = yield db_2.prisma.user.findFirst({
             where: {
                 username: username
             }
         });
-        const existingUser = yield db_1.UserModel.findOne({ username });
+        // const existingUser: any = await UserModel.findOne({username});
+        console.log(existingUser);
         if (existingUser) {
             const hashedPass = existingUser.password;
             const passwordsMatch = yield bcrypt_1.default.compare(password, hashedPass);
             if (passwordsMatch) {
                 const token = jsonwebtoken_1.default.sign({
-                    id: existingUser._id,
+                    id: existingUser.id,
                     username: username
                 }, JWT_SECRET);
                 res.status(200).json({ token });
@@ -189,6 +219,13 @@ userRouter.get("/info/:room_id", middleware_1.userMiddleware, (req, res) => __aw
 userRouter.get("/home", middleware_1.userMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const username = req.username;
     const userId = req.userId;
+    const userData1 = yield db_2.prisma.user.findMany({
+        where: {
+            id: userId,
+            username: username
+        }
+    });
+    console.log(userData1);
     const userData = yield db_1.UserModel.find({ _id: userId, username }, { password: 0, email: 0, __v: 0 }).populate("rooms");
     if (userData[0]) {
         const rooms = userData[0].rooms;
@@ -208,6 +245,13 @@ userRouter.get("/home", middleware_1.userMiddleware, (req, res) => __awaiter(voi
 userRouter.get("/home/userdata", middleware_1.userMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const username = req.username;
     const userId = req.userId;
+    const userData1 = yield db_2.prisma.user.findMany({
+        where: {
+            id: userId,
+            username
+        }
+    });
+    console.log(userData1);
     const userData = yield db_1.UserModel.find({ _id: userId, username }, { password: 0, email: 0, __v: 0 }).populate("rooms");
     if (userData[0]) {
         res.status(200).json({ userData: userData[0] });
