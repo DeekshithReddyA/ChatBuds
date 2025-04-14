@@ -20,7 +20,7 @@ const getUserColor = (userId: any) => {
 };
 
 const MessageBubble = ({ message, userData }: {message : any , userData: any}) => {
-  const isOwnMessage = message.sender._id === userData?._id;
+  const isOwnMessage = message.sender.id === userData?.id;
   
   return (
     <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-4`}>
@@ -41,7 +41,7 @@ const MessageBubble = ({ message, userData }: {message : any , userData: any}) =
         `}
       >
         {!isOwnMessage && (
-          <div className={`font-medium mb-1 ${getUserColor(message.sender._id)}`}>
+          <div className={`font-medium mb-1 ${getUserColor(message.sender.id)}`}>
             {message.sender.username}
           </div>
         )}

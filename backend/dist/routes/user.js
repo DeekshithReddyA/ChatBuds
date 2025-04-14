@@ -73,7 +73,6 @@ userRouter.post("/signup", upload.single('profilePicture'), (req, res) => __awai
                 username: username
             }
         });
-        // const existingUser = await UserModel.findOne({email : email , username : username});
         if (existingUser) {
             res.status(406).json({ message: "User with this email and username already exists." });
         }
@@ -135,7 +134,6 @@ userRouter.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, funct
                 username: username
             }
         });
-        // const existingUser: any = await UserModel.findOne({username});
         if (existingUser) {
             const hashedPass = existingUser.password;
             const passwordsMatch = yield bcrypt_1.default.compare(password, hashedPass);
@@ -176,26 +174,6 @@ userRouter.post("/create-room", middleware_1.userMiddleware, upload.single("room
                 }
             }
         });
-        //   // Update user's rooms
-        //   const userData = await prisma.user.findFirst({
-        //       select: {
-        //         rooms: true,
-        //         id: true,
-        //         username: true,
-        //         profilePicture: true,
-        //     },
-        //     where: { username }
-        // });
-        // if (!userData) {
-        //     res.status(404).json({ message: "User not found" });
-        //     return;
-        // }
-        // const rooms = userData.rooms || [];
-        // rooms.push(room);
-        // await prisma.user.update({
-        //     where: { username: userData.username },
-        //     data: { rooms }
-        // });
         res.status(200).json({ message: "Room created", link: room.id });
         return;
     }
@@ -205,98 +183,6 @@ userRouter.post("/create-room", middleware_1.userMiddleware, upload.single("room
         return;
     }
 }));
-/**
- * Handles uploading room picture to storage
- * @param req - Express request object
- * @returns URL of the uploaded image
- */
-// userRouter.post("/create-room", userMiddleware, upload.single("roomPicture"), async (req, res) => {
-//     console.log("Create room endpoint");
-//     console.log("req", req.body);
-//     const username: string = req.username
-//     const userId: string = req.userId;
-//     const roomName: string = req.body.roomName;
-//     const roomId: string = crypto.randomUUID();
-//     // const userId: ObjectId = new mongoose.Types.ObjectId(userIdInString);
-//     try {
-//         // const roomExists = await RoomModel.findOne({roomId});
-//         const roomExists1 = await prisma.room.findFirst({
-//             where: {
-//                 roomId: roomId
-//             }
-//         });
-//         console.log("hmm", roomExists1);
-//         let roomPicURL;
-//         const roomData: RoomDataType = { roomId, name: roomName, users: [userId] };
-//         if (roomExists1) {
-//             res.status(400).json({ message: "There was a problem! Please try again" });
-//         } else {
-//             if (req.body.roomPicture !== "groupPP") {
-//                 // roomData.roomPicture = {
-//                 //     data : req.file.buffer,
-//                 //     contentType : req.file.mimetype
-//                 // }
-//                 const buffer = req.file?.buffer; // Or use file.buffer from multer
-//                 const contentType = req.file?.mimetype; // or get from req.file.mimetype
-//                 const extension = contentType?.split("/")[1];
-//                 const fileName = `${randomUUID()}.${extension}`;
-//                 const bucketName = 'chatbuds';
-//                 const uploadParams = {
-//                     Bucket: bucketName,
-//                     Key: 'roompictures/' + fileName,
-//                     Body: buffer,
-//                     ContentType: contentType,
-//                     ACL: ObjectCannedACL.public_read// Only works if your bucket allows public access
-//                 };
-//                 await client.send(new PutObjectCommand(uploadParams));
-//                 console.log('✅ Uploaded successfully');
-//                 // 🔗 Get public URL
-//                 roomPicURL = `https://gerjkvkukfpmayzvpkqu.supabase.co/storage/v1/object/public/${bucketName}/roompictures/${fileName}`;
-//                 console.log('📷 Image URL:', roomPicURL);
-//             } else {
-//                 roomPicURL = `https://gerjkvkukfpmayzvpkqu.supabase.co/storage/v1/object/public/chatbuds/roompictures/roomPP.png`;
-//             }
-//         }
-//         // const room = await RoomModel.create(roomData);
-//         roomData.roomPicture = roomPicURL as string;
-//         const room = await prisma.room.create({
-//             data: {
-//                 name: roomData.name,
-//                 roomId: roomData.roomId,
-//                 roomPicture: roomData.roomPicture,
-//             }
-//         });
-//         console.log("room",room);
-//         const userData = await prisma.user.findFirst({
-//             select:{
-//                 rooms:true,
-//                 id: true,
-//                 username: true,
-//                 profilePicture: true,
-//             },
-//             where: {
-//                 username
-//             }
-//         });
-//         console.log("userData",userData);
-//         const rooms = userData?.rooms;
-//         console.log(rooms);
-//         rooms?.push(room);
-//         // const userData = await UserModel.findOne({ username });
-//         await prisma.user.update({
-//             where:{
-//                 username: userData?.username
-//             },
-//             data:{
-//                 rooms: rooms
-//             }
-//         })
-//         res.status(200).json({ message: "Room created", link: roomId });
-//     }
-//     catch (err) {
-//     res.status(500).json({ message: "Server Error", error: err });
-// }
-// })
 userRouter.post("/join-room", middleware_1.userMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const username = req.username;
     const userIdinString = req.userId;
@@ -358,7 +244,6 @@ userRouter.get("/info/:room_id", middleware_1.userMiddleware, (req, res) => __aw
                 users: true
             }
         });
-        // const room1 = await RoomModel.findById({ _id: room_id }, {}).populate("users", "username profilePicture");
         if (room !== null) {
             res.status(200).json({ roomDetails: room });
         }
@@ -370,44 +255,6 @@ userRouter.get("/info/:room_id", middleware_1.userMiddleware, (req, res) => __aw
         res.status(500).json({ message: "Server error", error: err });
     }
 }));
-// userRouter.get("/home", userMiddleware, async (req, res) => {
-//     const username: string = req.username;
-//     const userId: string = req.userId;
-//     const userData = await prisma.user.findFirst({
-//         where: {
-//             id: userId,
-//             username: username
-//         },
-//         select: {
-//             username: true,
-//             rooms: true,
-//             id: true,
-//             profilePicture: true,
-//             password: false,
-//             email: false
-//         }
-//     })
-//     console.log(userData);
-//     // const userData = await UserModel.find({ _id: userId, username }, { password: 0, email: 0, __v: 0 }).populate("rooms");
-//     if (userData !== null) {
-//         const rooms = userData.rooms;
-//         const messages = await prisma.messages.findMany({
-//             where: {
-//                 roomId :
-//             }
-//         })
-//         const messages1 = await MessageModel.find({ room_id: { "$in": rooms } })
-//             .populate({
-//                 path: "sender",
-//                 select: "username profilePicture"
-//             })
-//             .sort({ createdAt: 1 })
-//             .catch((error) => res.status(400).json({ error }));
-//         res.status(200).json({ userData: userData[0], messages });
-//     } else {
-//         res.status(404).json({ message: "User not found" });
-//     }
-// })
 userRouter.get("/home/userdata", middleware_1.userMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const username = req.username;
     const userId = req.userId;
@@ -433,7 +280,6 @@ userRouter.get("/home/userdata", middleware_1.userMiddleware, (req, res) => __aw
             username
         }
     });
-    // const userData = await UserModel.find({_id: userId , username} , {password: 0 , email: 0 , __v: 0}).populate("rooms");
     if (userData[0]) {
         res.status(200).json({ userData: userData[0] });
     }
@@ -454,10 +300,10 @@ userRouter.get("/home/:roomId", middleware_1.userMiddleware, (req, res) => __awa
             username: true,
             rooms: true,
             password: false,
-            email: false
+            email: false,
+            messages: true
         }
     });
-    // const userData = await UserModel.find({ _id: userId, username }, { password: 0, email: 0, __v: 0 }).populate("rooms");
     if (userData !== null) {
         const rooms = userData.rooms;
         const messages = yield db_1.prisma.messages.findMany({
@@ -466,15 +312,21 @@ userRouter.get("/home/:roomId", middleware_1.userMiddleware, (req, res) => __awa
             },
             orderBy: {
                 timestamp: 'asc'
+            },
+            select: {
+                id: true,
+                roomId: true,
+                text: true,
+                timestamp: true,
+                sender: {
+                    select: {
+                        id: true,
+                        username: true,
+                        profilePicture: true
+                    }
+                }
             }
         });
-        // const messages1 = await MessageModel.find({ room_id: roomId })
-        //     .populate({
-        //         path: "sender",
-        //         select: "username profilePicture"
-        //     })
-        //     .sort({ createdAt: 1 })
-        //     .catch((error) => res.status(400).json({ error }));
         res.status(200).json({ userData: userData, messages });
     }
     else {

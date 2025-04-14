@@ -60,7 +60,6 @@ export const Home = () => {
       if(userData){;
         
         setLoading(false);
-        console.log(messages);
       }
     } ,[userData]);
 
@@ -71,6 +70,7 @@ export const Home = () => {
         
         ws.onopen = () => {
             console.log("Connected to websocket");
+            
             reconnectAttempts.current = 0;
             ws.send(JSON.stringify({
                 type: "join",

@@ -9,12 +9,9 @@ interface Message {
     id: string;
     text: string;
     timestamp: string;
-    room_id: string;
+    roomId: string;
     sender: {
-        profilePicture:{
-            data: any,
-            contentType: any
-        }
+        profilePicture:string
         username?: string,
         id: string
     };
@@ -43,19 +40,18 @@ export const Room = (props: RoomProps) => {
     // WebSocket handler with cleanup
     useEffect(() => {
         const filtered_messages = props.messages?.filter((message) => {
-            return message.room_id === props.room?.id
+            return message.roomId === props.room?.id
         }
-        );
-        if (filtered_messages !== undefined) {
-            setRoomMessages(filtered_messages);
-        }
+    );
+    if (filtered_messages !== undefined) {
+        setRoomMessages(filtered_messages);
+    }
     }, [props.room?.id, props.messages]);
 
     useEffect(() => {
         const messageHandler = (event: MessageEvent) => {
             const data = JSON.parse(event.data);
-            console.log(data);
-            if (data.type === "chat" && data.room_id === props.room?.id) {
+            if (data.type === "chat" && data.roomId === props.room?.id) {
                 setRoomMessages(prev => [...prev, data]);
             }
         };
@@ -77,10 +73,11 @@ export const Room = (props: RoomProps) => {
         props.socket.send(JSON.stringify({
             type: "chat",
             payload: {
-                room_id: props.room?.id,
+                roomId: props.room?.id,
                 userId: props.userData?.id,
                 profilePicture : props.userData?.profilePicture,
                 msg: formData.text,
+                username: props.userData?.username
             }
         }));
 
@@ -98,13 +95,6 @@ export const Room = (props: RoomProps) => {
     }
 
     
-const dataToImageUrl = (profilePicture: { data: any, contentType: any }) => { 
-            const base64 = btoa(
-            new Uint8Array(profilePicture.data.data)
-            .reduce((data, byte) => data + String.fromCharCode(byte) , '')
-        );
-    return `data:${profilePicture.contentType};base64,${base64}`;
-}
 
     return (
         <>
@@ -124,8 +114,7 @@ const dataToImageUrl = (profilePicture: { data: any, contentType: any }) => {
                             {roomMessages
                                 .sort((a: any, b: any) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
                                 .map((message, index) => {
-                                    const url: string = dataToImageUrl(message.sender.profilePicture);
-                                    console.log("Control came till here");
+                                    const url: string = message.sender.profilePicture;
                                     return(
                                     <div key={`temp-${index}`} className={`flex ${message.sender?.id === props.userData?.id ?
                                             'items-end flex-col' : 'items-start'
@@ -135,15 +124,6 @@ const dataToImageUrl = (profilePicture: { data: any, contentType: any }) => {
                                                 message.sender?.id !== props.userData?.id && 
                                                 <img className="md:h-10 md:w-10 md:mr-2 mr-1 h-6 w-6 rounded-full" src={url} alt="User Profile"/>
                                             }
-                                            {/* <div className={`max-w-64 p-3 rounded-lg break-words text-sm md:text-base ${message.sender._id === props.userData?._id ?
-                                                    'bg-blue-600' : 'bg-neutral-800'
-                                                } text-white`}>
-                                                    <div className="text-red-500 underline">{message.sender._id !== props.userData?._id && message.sender.username}</div>
-                                                {message.text}
-                                                <div className="text-[10px] mt-1 opacity-70">
-                                                    {new Date(message.timestamp).toLocaleTimeString([] , {hour : 'numeric' , minute:'2-digit'})}
-                                                </div>
-                                            </div> */}
                                             <MessageBubble message={message} userData={props.userData} />
                                            {
                                                 message.sender?.id === props.userData?.id && 

@@ -78,7 +78,6 @@ export const Sidebar = (props: SidebarProps) => {
     {/*Rooms*/}
     <div className="flex-1 overflow-y-auto scrollbar-thin h-screen scrollbar-track-neutral-800 scrollbar-thumb-neutral-600">
     <div className="text-white my-4 mx-1 space-y-4">
-        {JSON.stringify(props.userData?.rooms[0])}
         {props.userData?.rooms.length !== 0 ? props.userData?.rooms?.map((room) => (
             <div key={room.id} className="hover:bg-neutral-900 p-2 transition-colors duration-300"
                 onClick={(e) =>{
