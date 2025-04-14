@@ -15,54 +15,28 @@ interface InfoModalProps{
 }
 
 interface RoomDetails{
-    roomDetails:{
-        roomId: string,
         name: string,
-        roomPicture?: {
-            data: any,
-            contentType: any
-        };
+        roomPicture?: string
         users: {
             username : string,
-            profilePicture: {
-                data : any,
-                contentType: any,
-            }
-        }[]
-    }
+            profilePicture: string
+        }[],
+        createdAt: string,
+        updatedAt: string,
+        id: string
 }
 
 export const InfoModal = (props: InfoModalProps) => {
     const [roomDetails , setRoomDetails] = useState<RoomDetails>({
-        roomDetails : {
-            roomId: "",
             name : "",
-            roomPicture: {
-                data : "",
-                contentType : "",
-            },
-            users  : []
-        }
+            roomPicture: "",
+            users  : [],
+            createdAt: "",
+            updatedAt: "",
+            id: ""
     });
     const [copy  ,setCopy] = useState<boolean>(false);
     const [loading , setLoading] = useState<boolean>(true);
-    const [imageUrl, setImageUrl] = useState<string>();
-
-    const dataToImageUrl = (data:any, contentType: any) => {
-        const base64 = btoa(
-            new Uint8Array(data)
-            .reduce((data, byte) => data + String.fromCharCode(byte) , '')
-        );
-        return `data:${contentType};base64,${base64}`;
-    }
-
-    useEffect(() => {
-        if(roomDetails.roomDetails)
-        {
-            const url: string = dataToImageUrl(roomDetails.roomDetails.roomPicture?.data.data , roomDetails.roomDetails.roomPicture?.contentType);
-            setImageUrl(url);
-        };
-    }, [roomDetails]);
 
     useEffect(() => {
         axios.get(`${BACKEND_URL}/info/${props.room_id}` , {
@@ -72,7 +46,7 @@ export const InfoModal = (props: InfoModalProps) => {
         }).then((response) => {
             console.log(response.data);
             if(response.data){
-                setRoomDetails(response.data);
+                setRoomDetails(response.data.roomDetails);
                 setLoading(false);
             } else{
                 setLoading(false);
@@ -95,7 +69,7 @@ export const InfoModal = (props: InfoModalProps) => {
 
     const handleCopyClick = async () => {
         try {
-            await window.navigator.clipboard.writeText(roomDetails.roomDetails.roomId);
+            await window.navigator.clipboard.writeText(roomDetails.id);
         } catch (err) {
             console.error(
                 err
@@ -122,15 +96,15 @@ export const InfoModal = (props: InfoModalProps) => {
                     <div className="flex flex-col justify-center items-center">
                         <div className="font-medium text-xl mb-4">Group info </div>
                         <div>
-                            <img className="rounded-full h-32 w-32" src={imageUrl}/>
+                            <img className="rounded-full h-32 w-32" src={roomDetails.roomPicture}/>
                         </div>
-                        <div className="my-4 text-lg">{roomDetails.roomDetails.name}</div>
+                        <div className="my-4 text-lg">{roomDetails.name}</div>
                                 <div className="text-sm m-3">
                                     Invite Link
                                 </div>
                             <div className="flex items-center">
                                 <div className="flex items-center">
-                                    <Input name={"link"} readOnly value={roomDetails.roomDetails.roomId} />
+                                    <Input name={"link"} readOnly value={roomDetails.id} />
                                     <div className="dark:text-white ml-2 cursor-pointer hover:scale-[1.01] transition-all duration-300 object-contain"
                                         onClick={() => {
                                             handleCopyClick();
@@ -146,8 +120,8 @@ export const InfoModal = (props: InfoModalProps) => {
                         <div className="bg-gradient-to-r from-transparent via-neutral-300 dark:via-neutral-700 to-transparent my-4 h-[1px] w-full" />
                         <div className="mb-4 font-medium">Members</div> 
                             <div className="flex flex-col items-start">
-                                {roomDetails?.roomDetails?.users.map((user, index) => {
-                                    const url = dataToImageUrl(user?.profilePicture?.data.data, user?.profilePicture?.contentType);
+                                {roomDetails?.users.map((user, index) => {
+                                    const url = user.profilePicture;
                                     return (
                                             <div key={index} className="flex items-center">
                                                 <img className="m-1 rounded-full h-8 w-8" src={url} alt="User Profile" />

@@ -75,7 +75,6 @@ const upload = multer({ storage: storage });
 
 userRouter.post("/signup", upload.single('profilePicture'), async (req, res) => {
     const { email, password, username } = req.body;
-    console.log("req", req.body);
 
     if (email === "" || password === "" || username === "" || email === undefined || password === undefined || username === undefined) {
         res.status(406).json({ message: "Enter all details" });
@@ -89,7 +88,6 @@ userRouter.post("/signup", upload.single('profilePicture'), async (req, res) => 
                 username: username
             }
         });
-        console.log(existingUser);
         // const existingUser = await UserModel.findOne({email : email , username : username});
         if (existingUser) {
             res.status(406).json({ message: "User with this email and username already exists." });
@@ -97,7 +95,6 @@ userRouter.post("/signup", upload.single('profilePicture'), async (req, res) => 
             const hashPassword = await bcrypt.hash(password, saltRounds);
 
             const userData: userDataType = { username, email, password: hashPassword };
-            console.log(req.file);
             let profilePicURL;
             if (req.body.profilePicture !== "userPP") {
                 const buffer = req.file?.buffer; // Or use file.buffer from multer
@@ -160,7 +157,6 @@ userRouter.post("/signin", async (req, res) => {
             }
         });
         // const existingUser: any = await UserModel.findOne({username});
-        console.log(existingUser);
         if (existingUser) {
             const hashedPass: string = existingUser.password;
 
@@ -186,17 +182,6 @@ userRouter.post("/create-room" , userMiddleware , upload.single("roomPicture") ,
     try {
         const { username, userId } = req;
         const { roomName } = req.body;
-        const roomId = crypto.randomUUID();
-        
-        // Check if room already exists (though UUID collision is extremely unlikely)
-        const roomExists = await prisma.room.findFirst({
-            where: { roomId }
-        });
-        
-        if (roomExists) {
-            res.status(400).json({ message: "There was a problem! Please try again" });
-            return;
-        }
         
         // Generate room picture URL
         const roomPicURL = await handleRoomPictureUpload(req);
@@ -205,7 +190,6 @@ userRouter.post("/create-room" , userMiddleware , upload.single("roomPicture") ,
         const room = await prisma.room.create({
             data: {
                 name: roomName,
-                roomId,
                 roomPicture: roomPicURL,
                 users: {
                     connect: {
@@ -239,7 +223,7 @@ userRouter.post("/create-room" , userMiddleware , upload.single("roomPicture") ,
     //     data: { rooms }
     // });
     
-    res.status(200).json({ message: "Room created", link: roomId });
+    res.status(200).json({ message: "Room created", link: room.id });
     return;
 } catch (err) {
     console.error("Error creating room:", err);
@@ -357,39 +341,72 @@ userRouter.post("/join-room", userMiddleware, async (req, res) => {
     const userIdinString: string = req.userId;
     const roomId: string = req.body.roomId;
 
-    const userId: ObjectId = new mongoose.Types.ObjectId(userIdinString);
-
     try {
-        const roomExists = await RoomModel.findOne({ roomId })
-        if (roomExists) {
-            const users = roomExists.users;
-            if (users.some((user) => user.toString() === userId.toString())) {
-                res.status(406).json({ message: "You are already in the room" });
-                return;
-            }
-            users.push(userId);
-            await RoomModel.findOneAndUpdate({ roomId }, { users: users });
+        // Check if the room exists
+        const room = await prisma.room.findUnique({
+            where: { id: roomId },
+            include: { users: true },
+        });
 
-            const userData = await UserModel.findOne({ username });
-            const rooms = userData?.rooms;
-            rooms?.push(roomExists._id);
-            await UserModel.findOneAndUpdate({ username }, { rooms: rooms });
-
-            res.status(200).json({ message: "User added to room" })
-        } else {
+        if (!room) {
             res.status(404).json({ message: "Room not found" });
+            return;
         }
+
+        // Check if user is already in the room
+        const alreadyInRoom = room.users.some((user) => user.id === userIdinString);
+        if (alreadyInRoom) {
+            res.status(406).json({ message: "You are already in the room" });
+            return;
+        }
+
+        // Add user to room
+        await prisma.room.update({
+            where: { id: roomId },
+            data: {
+                users: {
+                    connect: { id: userIdinString },
+                },
+            },
+        });
+
+        // Also update user's rooms (optional, since it's the same relation)
+        await prisma.user.update({
+            where: { id: userIdinString },
+            data: {
+                rooms: {
+                    connect: { id: roomId },
+                },
+            },
+        });
+
+        res.status(200).json({ message: "User added to room successfully" });
     } catch (err) {
+        console.error(err);
         res.status(500).json({ message: "Server error", error: err });
     }
 });
+
 
 userRouter.get("/info/:room_id", userMiddleware, async (req, res) => {
     const room_id: string = req.params.room_id;
 
     try {
-        const room = await RoomModel.findById({ _id: room_id }, {}).populate("users", "username profilePicture");
-        if (room) {
+        const room = await prisma.room.findFirst({
+            where: {
+                id : room_id
+            },
+            select :{
+                id: true,
+                name: true,
+                roomPicture: true,
+                createdAt: true,
+                updatedAt: true,
+                users : true
+            }
+        })
+        // const room1 = await RoomModel.findById({ _id: room_id }, {}).populate("users", "username profilePicture");
+        if (room !== null) {
             res.status(200).json({ roomDetails: room });
         } else {
             res.status(204).json({ message: "Room not found!" });
@@ -400,32 +417,45 @@ userRouter.get("/info/:room_id", userMiddleware, async (req, res) => {
 })
 
 
-userRouter.get("/home", userMiddleware, async (req, res) => {
-    const username: string = req.username;
-    const userId: string = req.userId;
+// userRouter.get("/home", userMiddleware, async (req, res) => {
+//     const username: string = req.username;
+//     const userId: string = req.userId;
 
-    const userData1 = await prisma.user.findMany({
-        where: {
-            id: userId,
-            username: username
-        }
-    })
-    console.log(userData1);
-    const userData = await UserModel.find({ _id: userId, username }, { password: 0, email: 0, __v: 0 }).populate("rooms");
-    if (userData[0]) {
-        const rooms = userData[0].rooms;
-        const messages = await MessageModel.find({ room_id: { "$in": rooms } })
-            .populate({
-                path: "sender",
-                select: "username profilePicture"
-            })
-            .sort({ createdAt: 1 })
-            .catch((error) => res.status(400).json({ error }));
-        res.status(200).json({ userData: userData[0], messages });
-    } else {
-        res.status(404).json({ message: "User not found" });
-    }
-})
+//     const userData = await prisma.user.findFirst({
+//         where: {
+//             id: userId,
+//             username: username
+//         },
+//         select: {
+//             username: true,
+//             rooms: true,
+//             id: true,
+//             profilePicture: true,
+//             password: false,
+//             email: false
+//         }
+//     })
+//     console.log(userData);
+//     // const userData = await UserModel.find({ _id: userId, username }, { password: 0, email: 0, __v: 0 }).populate("rooms");
+//     if (userData !== null) {
+//         const rooms = userData.rooms;
+//         const messages = await prisma.messages.findMany({
+//             where: {
+//                 roomId :
+//             }
+//         })
+//         const messages1 = await MessageModel.find({ room_id: { "$in": rooms } })
+//             .populate({
+//                 path: "sender",
+//                 select: "username profilePicture"
+//             })
+//             .sort({ createdAt: 1 })
+//             .catch((error) => res.status(400).json({ error }));
+//         res.status(200).json({ userData: userData[0], messages });
+//     } else {
+//         res.status(404).json({ message: "User not found" });
+//     }
+// })
 
 userRouter.get("/home/userdata", userMiddleware, async (req, res) => {
     const username: string = req.username;
@@ -441,7 +471,6 @@ userRouter.get("/home/userdata", userMiddleware, async (req, res) => {
             rooms: {
                 select: {
                     id: true,
-                    roomId: true,
                     name: true,
                     roomPicture: true,
                     createdAt: true,
@@ -454,7 +483,6 @@ userRouter.get("/home/userdata", userMiddleware, async (req, res) => {
             username
         }
     });
-    console.log(userData);
     // const userData = await UserModel.find({_id: userId , username} , {password: 0 , email: 0 , __v: 0}).populate("rooms");
 
     if (userData[0]) {
@@ -469,17 +497,40 @@ userRouter.get("/home/:roomId", userMiddleware, async (req, res) => {
     const userId: string = req.userId;
     const roomId: string = req.params.roomId;
 
-    const userData = await UserModel.find({ _id: userId, username }, { password: 0, email: 0, __v: 0 }).populate("rooms");
-    if (userData[0]) {
-        const rooms = userData[0].rooms;
-        const messages = await MessageModel.find({ room_id: roomId })
-            .populate({
-                path: "sender",
-                select: "username profilePicture"
-            })
-            .sort({ createdAt: 1 })
-            .catch((error) => res.status(400).json({ error }));
-        res.status(200).json({ userData: userData[0], messages });
+    const userData = await prisma.user.findFirst({
+        where:{
+            id: userId, 
+            username: username
+        },
+        select:{
+            username: true,
+            rooms: true,
+            password: false,
+            email: false
+        }        
+    })
+
+    // const userData = await UserModel.find({ _id: userId, username }, { password: 0, email: 0, __v: 0 }).populate("rooms");
+    if (userData !== null) {
+        const rooms = userData.rooms;
+
+        const messages = await prisma.messages.findMany({
+            where: {
+                roomId: roomId,
+            },
+            orderBy:{
+                timestamp: 'asc'
+            }
+        });
+
+        // const messages1 = await MessageModel.find({ room_id: roomId })
+        //     .populate({
+        //         path: "sender",
+        //         select: "username profilePicture"
+        //     })
+        //     .sort({ createdAt: 1 })
+        //     .catch((error) => res.status(400).json({ error }));
+        res.status(200).json({ userData: userData, messages });
     } else {
         res.status(404).json({ message: "User not found" });
     }

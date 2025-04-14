@@ -78,13 +78,14 @@ export const Sidebar = (props: SidebarProps) => {
     {/*Rooms*/}
     <div className="flex-1 overflow-y-auto scrollbar-thin h-screen scrollbar-track-neutral-800 scrollbar-thumb-neutral-600">
     <div className="text-white my-4 mx-1 space-y-4">
+        {JSON.stringify(props.userData?.rooms[0])}
         {props.userData?.rooms.length !== 0 ? props.userData?.rooms?.map((room) => (
-            <div key={room._id} className="hover:bg-neutral-900 p-2 transition-colors duration-300"
+            <div key={room.id} className="hover:bg-neutral-900 p-2 transition-colors duration-300"
                 onClick={(e) =>{
                     e.preventDefault();
                     props.setInfoModalOpen(false);
                     props.setSelectedRoom(room);
-                    props.refresh(room._id);
+                    props.refresh(room.id);
                 }}>
                 <RoomCard roomPicture={room.roomPicture} name={room.name} sidebarOpen={props.sidebarOpen}/>
             </div>
@@ -94,84 +95,5 @@ export const Sidebar = (props: SidebarProps) => {
     </div>
     </div>
 </div>
-
-
-    // <div className={`h-screen overflow-y-auto ${props.sidebarOpen ? "min-w-[320px] absolute md:block" : ""} dark:bg-neutral-800
-    //         scrollbar-thin
-    //         scrollbar-track-neutral-800 
-    //         scrollbar-thumb-neutral-600`}>
-    //     <div className={`${props.sidebarOpen ? "flex justify-between" : ""}`}>
-    //         <div className={`${props.sidebarOpen ? "block" : "hidden"} text-white font-medium text-xl my-6 mx-6`}>
-    //             ChatBuds
-    //         </div>
-    //         <div className={`${props.sidebarOpen ? "block" : "hidden"} my-6 ml-16 md:mx-10 text-white`}>
-    //             <MessageSquarePlus size={24}/>         
-    //         </div>
-    //         <div onClick={(e) => {
-    //             e.preventDefault();
-    //             props.setSidebarOpen(true);
-    //         }} className={`${props.sidebarOpen ? "hidden" : "block"} text-white mx-4 my-6 hover:-translate-y-1 transition-all duration-300 object-contain`}>
-    //             <Menu size={22}/>
-    //         </div>
-    //         <div onClick={(e) =>{
-    //             e.preventDefault();
-    //             props.setSidebarOpen(false);
-    //         }} className={`${props.sidebarOpen ? "block md:hidden" : "hidden"} text-white mr-4 my-6 hover:-translate-y-1 transition-all duration-300 object-contain`}>
-    //             <ArrowLeftToLine size={22}/>
-    //         </div>
-    //     </div>
-    //     {/*Search*/}
-    //     <div className={`${props.sidebarOpen ? "block" : "hidden"} relative rounded-lg outline outline-neutral-700 mx-4`}>
-    //         <div onClick={(e) => {
-    //             e.preventDefault();
-    //             props.setSidebarOpen(true);
-    //         }} className={`${props.sidebarOpen ? "absolute left-3 top-2 dark:text-white" : ""} hover:-translate-y-1 transition-all duration-300 object-contain`}>
-    //             <Search />
-    //         </div>
-    //         <div className={`${props.sidebarOpen ? "block" : "hidden"}`}>
-    //             <Input className="w-full pl-11" placeholder="Search Rooms..."/>
-    //             <div className="text-neutral-400 absolute top-3 right-3">
-    //                 <X size={18}/>
-    //             </div>
-    //         </div>
-    //     </div>
-
-    //     {/*Rooms*/}
-    //     <div className="text-white my-4 mx-1 space-y-4">
-    //         <div className="hover:bg-neutral-900 p-2">
-    //             <RoomCard sidebarOpen={props.sidebarOpen}/>
-    //         </div>
-    //         <div className="hover:bg-neutral-900 p-2">
-    //             <RoomCard sidebarOpen={props.sidebarOpen}/>
-    //         </div>
-    //         <div className="hover:bg-neutral-900 p-2">
-    //             <RoomCard sidebarOpen={props.sidebarOpen}/>
-    //         </div>
-    //         <div className="hover:bg-neutral-900 p-2">
-    //             <RoomCard sidebarOpen={props.sidebarOpen}/>
-    //         </div>
-    //         <div className="hover:bg-neutral-900 p-2">
-    //             <RoomCard sidebarOpen={props.sidebarOpen}/>
-    //         </div>
-    //         <div className="hover:bg-neutral-900 p-2">
-    //             <RoomCard sidebarOpen={props.sidebarOpen}/>
-    //         </div>
-    //         <div className="hover:bg-neutral-900 p-2">
-    //             <RoomCard sidebarOpen={props.sidebarOpen}/>
-    //         </div>
-    //         <div className="hover:bg-neutral-900 p-2">
-    //             <RoomCard sidebarOpen={props.sidebarOpen}/>
-    //         </div>
-    //         <div className="hover:bg-neutral-900 p-2">
-    //             <RoomCard sidebarOpen={props.sidebarOpen}/>
-    //         </div>
-    //         <div className="hover:bg-neutral-900 p-2">
-    //             <RoomCard sidebarOpen={props.sidebarOpen}/>
-    //         </div>
-    //         <div className="hover:bg-neutral-900 p-2">
-    //             <RoomCard sidebarOpen={props.sidebarOpen}/>
-    //         </div>
-    //     </div>
-    // </div>
     )
 } 

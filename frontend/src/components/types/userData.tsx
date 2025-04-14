@@ -1,5 +1,5 @@
 export interface userDataProps { 
-        _id: string;
+        id: string;
         username : string;
         createdAt ?: string,
         updatedAt ?: string;
@@ -10,14 +10,10 @@ export interface userDataProps {
         rooms : {
             name : string,
             roomId : string,
-            roomPicture ?: {
-                data : any,
-                contentType: string
-            },
+            roomPicture ?: string,
             users: string[],
             updatedAt ?: string,
             createdAt ?: string,
-            __v ?: any,
-            _id ?: any
+            id ?: any
         }[] 
     } 

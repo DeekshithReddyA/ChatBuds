@@ -16,6 +16,7 @@ export const useUserData = (roomId: string) => {
                 }
             })
             .then((response) => {
+                console.log(response.data);
                 setUserData(response.data.userData);
             })
             .catch(() => navigation('/'));

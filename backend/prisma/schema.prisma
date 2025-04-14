@@ -27,8 +27,7 @@ model User {
 
 
 model Room{
-  id            String            @id   @default(uuid())  
-  roomId        String                  @unique
+  id            String            @id   @default(uuid())
   name          String            
   roomPicture   String
   createdAt     DateTime                @default(now())

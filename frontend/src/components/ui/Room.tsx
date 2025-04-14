@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { InfoModal } from "./InfoModal";
 import MessageBubble from "./MessageBubble";
 interface Message {
-    _id: string;
+    id: string;
     text: string;
     timestamp: string;
     room_id: string;
@@ -16,18 +16,15 @@ interface Message {
             contentType: any
         }
         username?: string,
-        _id: string
+        id: string
     };
 }
 interface RoomProps {
     room?: {
-        _id: string;
+        id: string;
         roomId: string;
         name: string;
-        roomPicture?: {
-            data: any;
-            contentType: string;
-        };
+        roomPicture?: string;
     };
     messages?: Message[]
     userData?: userDataProps;
@@ -46,26 +43,26 @@ export const Room = (props: RoomProps) => {
     // WebSocket handler with cleanup
     useEffect(() => {
         const filtered_messages = props.messages?.filter((message) => {
-            return message.room_id === props.room?._id
+            return message.room_id === props.room?.id
         }
         );
         if (filtered_messages !== undefined) {
             setRoomMessages(filtered_messages);
         }
-    }, [props.room?._id, props.messages]);
+    }, [props.room?.id, props.messages]);
 
     useEffect(() => {
         const messageHandler = (event: MessageEvent) => {
             const data = JSON.parse(event.data);
             console.log(data);
-            if (data.type === "chat" && data.room_id === props.room?._id) {
+            if (data.type === "chat" && data.room_id === props.room?.id) {
                 setRoomMessages(prev => [...prev, data]);
             }
         };
 
         props.socket.addEventListener('message', messageHandler);
         return () => props.socket.removeEventListener('message', messageHandler);
-    }, [props.room?._id]);
+    }, [props.room?.id]);
 
     // Auto-scroll to bottom
     useEffect(() => {
@@ -80,8 +77,8 @@ export const Room = (props: RoomProps) => {
         props.socket.send(JSON.stringify({
             type: "chat",
             payload: {
-                room_id: props.room?._id,
-                userId: props.userData?._id,
+                room_id: props.room?.id,
+                userId: props.userData?.id,
                 profilePicture : props.userData?.profilePicture,
                 msg: formData.text,
             }
@@ -111,7 +108,7 @@ const dataToImageUrl = (profilePicture: { data: any, contentType: any }) => {
 
     return (
         <>
-            <InfoModal room_id={props.room?._id} infoModalOpen={props.infoModalOpen} setInfoModalOpen={props.setInfoModalOpen} />
+            <InfoModal room_id={props.room?.id} infoModalOpen={props.infoModalOpen} setInfoModalOpen={props.setInfoModalOpen} />
             <div className="flex flex-col bg-neutral-900 h-screen">
                 <div className="fixed top-0 w-screen z-10">
                     <RoomNavbar setInfoModalOpen={props.setInfoModalOpen} room={props.room} />
@@ -130,12 +127,12 @@ const dataToImageUrl = (profilePicture: { data: any, contentType: any }) => {
                                     const url: string = dataToImageUrl(message.sender.profilePicture);
                                     console.log("Control came till here");
                                     return(
-                                    <div key={`temp-${index}`} className={`flex ${message.sender?._id === props.userData?._id ?
+                                    <div key={`temp-${index}`} className={`flex ${message.sender?.id === props.userData?.id ?
                                             'items-end flex-col' : 'items-start'
                                         }`}>
                                         <div className="flex items-center">
                                             {
-                                                message.sender?._id !== props.userData?._id && 
+                                                message.sender?.id !== props.userData?.id && 
                                                 <img className="md:h-10 md:w-10 md:mr-2 mr-1 h-6 w-6 rounded-full" src={url} alt="User Profile"/>
                                             }
                                             {/* <div className={`max-w-64 p-3 rounded-lg break-words text-sm md:text-base ${message.sender._id === props.userData?._id ?
@@ -149,7 +146,7 @@ const dataToImageUrl = (profilePicture: { data: any, contentType: any }) => {
                                             </div> */}
                                             <MessageBubble message={message} userData={props.userData} />
                                            {
-                                                message.sender?._id === props.userData?._id && 
+                                                message.sender?.id === props.userData?.id && 
                                                 <img className="h-10 w-10 ml-1 rounded-full" src={url} alt="User Profile"/>
                                             }
                                         </div>
