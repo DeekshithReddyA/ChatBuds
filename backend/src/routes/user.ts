@@ -1,6 +1,5 @@
 import { Request, Router } from "express";
 import bcrypt from 'bcrypt';
-import { MessageModel, RoomModel, UserModel } from "../db";
 import jwt from 'jsonwebtoken';
 import 'dotenv/config';
 import { userMiddleware } from "../middleware";

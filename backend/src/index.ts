@@ -3,10 +3,8 @@ import {createServer} from 'http';
 import express from 'express';
 import cors from 'cors';
 import userRouter from './routes/user';
-import { MessageModel, UserModel } from "./db";
-import jwt, { decode, JwtPayload } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import 'dotenv/config';
-import mongoose, { mongo, ObjectId } from "mongoose";
 import { prisma } from "./db";
 
 
